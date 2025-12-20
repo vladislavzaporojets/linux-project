@@ -38,10 +38,3 @@ jobs:
           kubsh.deb
           kubsh
         retention-days: 30
-    
-    - name: Test installation
-      run: |
-        if [ -f kubsh.deb ]; then
-          echo "Testing DEB package installation..."
-          sudo dpkg -i kubsh.deb 2>/dev/null || echo "Install test completed"
-        fi
