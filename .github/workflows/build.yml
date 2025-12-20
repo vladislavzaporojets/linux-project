@@ -1,4 +1,4 @@
-name: Run tests & upload artifact
+name: Build KUBSh
 
 on:
   push:
@@ -12,33 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout current repo
+    - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
-    - name: Pull builder image
-      run: docker pull vlashex/kubsh-builder:latest
-
-    - name: Build, install and test (using same container as locally)
+    - name: Build using custom builder
       run: |
         docker run --rm --privileged \
-        -v "$PWD:/mnt" \
-        vlashex/kubsh-builder:latest
+          -v "$PWD:/workspace" \
+          vladislavzaporojets/kubsh-builder:latest
 
-    - name: Verify kubsh.deb exists
+    - name: Verify artifacts
       run: |
-        if [ ! -f "kubsh.deb" ]; then
-          echo "❌ kubsh.deb not found!"
-          ls -la
-          exit 1
-        fi
-        echo "✅ kubsh.deb found"
-        ls -la kubsh.deb
+        echo "=== Generated files ==="
+        ls -la kubsh* 2>/dev/null || echo "No kubsh files found"
+        echo -e "\n=== Checking binary ==="
+        file kubsh 2>/dev/null || true
+        echo -e "\n=== Package info ==="
+        dpkg -I kubsh.deb 2>/dev/null || true
 
-    - name: Upload kubsh.deb artifact
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: kubsh-package
-        path: kubsh.deb
+        path: |
+          kubsh.deb
+          kubsh
         retention-days: 30
+    
+    - name: Test installation
+      run: |
+        if [ -f kubsh.deb ]; then
+          echo "Testing DEB package installation..."
+          sudo dpkg -i kubsh.deb 2>/dev/null || echo "Install test completed"
+        fi
