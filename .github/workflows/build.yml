@@ -17,13 +17,13 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Pull builder image
+    - name: Pull YOUR builder image
       run: docker pull vladislavzaporojets/kubsh-builder:latest
 
     - name: Build, install and test (using same container as locally)
       run: |
         docker run --rm --privileged \
-        -v "$PWD:/workspace" \
+        -v "$PWD:/mnt" \
         vladislavzaporojets/kubsh-builder:latest
 
     - name: Verify kubsh.deb exists
